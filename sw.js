@@ -1,6 +1,6 @@
 import { mockProfileAPI } from "./src/js/mock-api.js";
 
-const cacheName = "app-shell-v1";
+const cacheName = "app-shell-v2";
 const assetsToCache = [
   "https://cdnjs.cloudflare.com/ajax/libs/material-design-lite/1.3.0/material.indigo-pink.min.css",
   "https://fonts.gstatic.com/s/materialicons/v55/flUhRq6tzZclQEJ-Vdg-IuiaDsNcIhQ8tQ.woff2",
@@ -29,6 +29,7 @@ self.addEventListener("install", (event) => {
 
 self.addEventListener("activate", (event) => {
   console.log(`👁️ [sw.js] activated`);
+  event.waitUntil(cacheCleanup());
   self.clients.claim();
 });
 
@@ -42,6 +43,19 @@ async function cacheStaticAssets() {
   const cache = await caches.open(cacheName);
   return cache.addAll(assetsToCache);
 }
+
+async function removeOldCache(key) {
+  if (key !== cacheName) {
+    console.log(`👁️ [sw.js] removing old cache: ${key}`);
+    return caches.delete(key);
+  }
+}
+
+async function cacheCleanup() {
+  const keyList = await caches.keys();
+  return Promise.all(keyList.map(removeOldCache));
+}
+
 
 async function proxy(request) {
   console.log(`👁️ [sw.js] proxying...`);
